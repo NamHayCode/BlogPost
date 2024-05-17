@@ -7,9 +7,15 @@ const newPostController = require('./controllers/newPost')
 const homeController = require('./controllers/home') 
 const storePostController = require('./controllers/storePost') 
 const getPostController = require('./controllers/getPost')
+const logoutController = require('./controllers/logout')
+const loginUserController = require('./controllers/loginUser')
 app.use(fileUpload())
 const validateMiddleware = require("./middleware/validationMiddleware"); 
 app.use('/posts/store', validateMiddleware)
+const authMiddleware = require('./middleware/authMiddleware')
+app.get('/posts/new', authMiddleware, newPostController)
+const redirectIfAuthenticatedMiddleware = require('./middleware/redirectIfAuthenticatedMiddleware')
+// const globalMiddleware = require('./middleware/globalMiddleware');
 const newUserController = require('./controllers/newUser') 
 const bodyParser = require('body-parser')
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -21,6 +27,19 @@ const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/my_database', {
 //   useUnifiedTopology: true // Add this option to use the new Server Discover and Monitoring engine
 });
+const expressSession = require('express-session');
+app.use(expressSession({
+    secret: 'keyboard cat'
+   }))
+
+// app.use(globalMiddleware(app));
+global.loggedIn = null;
+app.use("*", (req, res, next) => {
+ loggedIn = req.session.userId;
+ next()
+});
+
+const loginController = require('./controllers/login')
 
 
 //Đăng ký thư mục public.....
@@ -31,7 +50,7 @@ app.listen(4000, () => {
     console.log('OK. App listening on port 4000')
 })
 
-
+app.get('/auth/logout', logoutController)
 app.get('/', homeController);
 
 app.get('/about', (req, res) => {
@@ -40,13 +59,18 @@ app.get('/about', (req, res) => {
 app.get('/contact', (req, res) => {
     res.render('contact');
 })
-app.post('/users/register', storeUserController)
+
 
 app.get('/post/:id', getPostController);
 
 
-app.get('/posts/new',newPostController)
-app.post('/posts/store', storePostController);
+app.get('/posts/new', authMiddleware, newPostController)
+app.post('/posts/store', authMiddleware, storePostController)
 
-app.get('/auth/register', newUserController)
+app.use((req, res) => res.render('notfound'));
 
+
+app.post('/users/login', redirectIfAuthenticatedMiddleware, loginUserController)
+app.get('/auth/register', redirectIfAuthenticatedMiddleware, newUserController)
+app.post('/users/register', redirectIfAuthenticatedMiddleware, storeUserController)
+app.get('/auth/login', redirectIfAuthenticatedMiddleware, loginController)

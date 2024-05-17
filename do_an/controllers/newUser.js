@@ -1,3 +1,5 @@
+
 module.exports = (req, res) => {
-     res.render('register') // render register.ejs 
-}
+     res.render('register', { errorMessage: null });
+ };
+ 

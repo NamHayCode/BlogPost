@@ -6,6 +6,6 @@ module.exports = async (req, res) => {
         res.redirect('/');
     } catch (error) {
         console.error(error);
-        res.redirect('/auth/register');
+        res.render('register', { errorMessage: 'Registration failed. Please try again.' });
     }
 };
