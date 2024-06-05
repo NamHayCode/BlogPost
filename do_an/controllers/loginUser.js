@@ -8,8 +8,8 @@ module.exports = async (req, res) => {
         if (user) {
             const same = await bcrypt.compare(password, user.password);
             if (same) {
-                // Store user session, will talk about it later
-                req.session.userId = user._id
+                // Lưu userId vào session
+                req.session.userId = user._id;
                 res.redirect('/');
             } else {
                 res.render('login', { errorMessage: 'Invalid username or password.' });
